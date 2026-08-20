@@ -1,0 +1,59 @@
+data:
+  class_path: src.datasets.data_modules.MegaDataModule
+  init_args:
+    batch_size: 128
+    num_workers: 48
+    dataset_config:
+      root_path: pcd_data/preprocessed_data
+      num_sampling_points: 4096
+      quantization: 0.05
+      val_ds: [S3DIS]
+      train_ds: [Kitti360, Scannet, STPLS, ARKit, MultiScan, HM3D, RScan]
+model:
+  network:
+    class_path: src.models.DynamicSAM
+    init_args:
+      pcd_encoder_params:
+        trans_dim: 384
+        depth: 12
+        drop_path_rate: 0.1
+        num_heads: 6
+        group_size: 32
+        num_group: 128
+      prompt_encoder_params:
+        embedding_dim: 384
+      mask_decoder_params:
+        trans_dim: 384
+        num_multimask_outputs: 3
+        iou_head_depth: 3
+        iou_head_hidden_dim: 256
+  optimizer:
+    class_path: torch.optim.AdamW
+    init_args:
+      lr: 0.0001
+      weight_decay: 0.001
+  scheduler:
+    class_path: torch.optim.lr_scheduler.MultiStepLR
+    init_args:
+      milestones: [890,1800]
+      gamma: 0.1
+  # pcd_encoder_pretrain_path: work_dirs/ckpt-last-vitb-m0.8-d384-dec2.pth
+  pcd_dump_interval: 800
+  max_num_next_clicks: 8
+  init_lr: 0.0001
+  warmup_iter: 60
+  iou_threshold: 0.3
+trainer:
+  max_epochs: 2000
+  devices: [2]
+  check_val_every_n_epoch: 10
+  gradient_clip_val: 0.5
+  # log_every_n_steps: 100
+  strategy:
+    class_path: lightning.pytorch.strategies.DDPStrategy
+  logger:
+    class_path: lightning.pytorch.loggers.tensorboard.TensorBoardLogger
+    init_args:
+      save_dir: experiments/seg_pcd
+      name: mega
+ckpt_path: path/to/checkpoint

@@ -1,0 +1,18 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.ipynb
+.pytest_cache/
+
+.vscode
+.venv/
+
+# custom
+/data
+/build
+/dist
+/experiments
+*.log
+*.egg-info/
+

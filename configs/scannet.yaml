@@ -1,0 +1,61 @@
+data:
+  class_path: src.datasets.data_modules.ScannetDataModule
+  init_args:
+    batch_size: 128
+    use_v2: true
+    num_workers: 48
+    dataset_config:
+      root_path: pcd_data/agile_ds/ScanNet/scans
+      voxelize_only: false
+      num_sampling_points: 4096
+      quantization: 0.05
+model:
+  network:
+    class_path: src.models.DynamicSAM
+    init_args:
+      pcd_encoder_params:
+        trans_dim: 384
+        depth: 12
+        drop_path_rate: 0.1
+        num_heads: 6
+        group_size: 32
+        num_group: 128  
+      prompt_encoder_params:
+        embedding_dim: 384
+      mask_decoder_params:
+        trans_dim: 384
+        num_multimask_outputs: 3
+  optimizer:
+    class_path: torch.optim.AdamW
+    init_args:
+      lr: 0.0004
+      weight_decay: 0.1
+  scheduler:
+    class_path: torch.optim.lr_scheduler.MultiStepLR
+    init_args:
+      milestones: [100,180,250,350]
+      gamma: 0.1
+  pcd_encoder_pretrain_path: work_dirs/ckpt-last-vitb-m0.8-d384-dec2.pth
+  pcd_dump_interval: 100
+  max_num_next_clicks: 20
+  init_lr: 0.0004
+  warmup_iter: 1000
+  iou_threshold: 0.3
+  max_ious: [0.8, 0.85, 0.9]
+  max_nocs: [1,2,3,5,10,15]
+trainer:
+  max_epochs: 500
+  devices: [1,2,3]
+  check_val_every_n_epoch: 5
+  log_every_n_steps: 5
+  strategy:
+    class_path: lightning.pytorch.strategies.DDPStrategy
+    init_args:
+      timeout: '1:60:00'
+  num_sanity_val_steps: 0
+  logger:
+    class_path: lightning.pytorch.loggers.tensorboard.TensorBoardLogger
+    init_args:
+      save_dir: experiments/seg_pcd/new_1
+      name: scannet
+ckpt_path: path/to/checkpoint

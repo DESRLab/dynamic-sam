@@ -1,0 +1,56 @@
+data:
+  class_path: src.datasets.data_modules.MixModelNetDataModule
+  init_args:
+    batch_size: 1
+    num_workers: 48
+    dataset_config:
+      root_path: pcd_data/preprocessed_data/augmented_modelnet
+model:
+  network:
+    class_path: src.models.DynamicSAM
+    init_args:
+      pcd_encoder_params:
+        trans_dim: 384
+        depth: 12
+        drop_path_rate: 0.1
+        num_heads: 6
+        group_size: 64
+        num_group: 128
+      prompt_encoder_params:
+        embedding_dim: 384
+      mask_decoder_params:
+        trans_dim: 384
+        num_multimask_outputs: 3
+        iou_head_depth: 3
+        iou_head_hidden_dim: 384
+  optimizer:
+    class_path: torch.optim.AdamW
+    init_args:
+      lr: 0.0001
+      weight_decay: 0.05
+  scheduler:
+    class_path: torch.optim.lr_scheduler.MultiStepLR
+    init_args:
+      milestones: [480,780]
+      gamma: 0.1
+  # pcd_encoder_pretrain_path: work_dirs/ckpt-last-vitb-m0.8-d384-dec2.pth
+  pcd_dump_interval: 200
+  max_num_next_clicks: 5
+  init_lr: 0.0001
+  warmup_iter: 10
+  iou_threshold: 0.3
+
+trainer:
+  # max_epochs: 400
+  devices: [0]
+  gradient_clip_val: 0.5
+  check_val_every_n_epoch: 10
+  # log_every_n_steps: 100
+  strategy:
+    class_path: lightning.pytorch.strategies.DDPStrategy
+  logger:
+    class_path: lightning.pytorch.loggers.tensorboard.TensorBoardLogger
+    init_args:
+      save_dir: experiments/seg_pcd/test
+      name: modelnet
+ckpt_path: path/to/checkpoint
