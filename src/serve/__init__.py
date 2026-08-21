@@ -107,9 +107,9 @@ def create_fast_api(predictor: DynamicSAM, device, max_users: int = 1, max_frame
     # would let one user's /predict_mask read another user's point cloud.
     cache = UserFrameCache(max_users=max_users, max_frames_per_user=max_frames_per_user)
 
-    @app.get('/')
-    def read_root():
-        return {"hello": "world"}
+    @app.get('/health')
+    def health():
+        return {"status": "ok", "model_loaded": True}
 
     @app.post("/encode_pcd")
     def encode_pcd(

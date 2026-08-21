@@ -81,13 +81,14 @@ def serve(
             )
         from huggingface_hub import hf_hub_download
 
-        print(f"Fetching {hf_filename} from {hf_repo_id} (Hugging Face cache: HF_HOME)...")
+        print(f"Fetching {hf_filename} from {hf_repo_id} (Hugging Face cache: HF_HOME)...", flush=True)
         model_path = hf_hub_download(repo_id=hf_repo_id, filename=hf_filename, revision=hf_revision)
+        print(f"Fetched {model_path}", flush=True)
 
-    print("Loading model...")
+    print("Loading model...", flush=True)
     model = load_dynamic_sam(model_path, device, group_size=group_size, num_group=num_group, optimized=optimized)
 
-    print(f"Serving with max_users={max_users}, max_frames_per_user={max_frames_per_user}")
+    print(f"Serving with max_users={max_users}, max_frames_per_user={max_frames_per_user}", flush=True)
     app = create_fast_api(model, device=f'cuda:{device}', max_users=max_users, max_frames_per_user=max_frames_per_user)
     uvicorn.run(app, host="127.0.0.1", port=port, reload=False, log_level="debug", workers=workers)
 
