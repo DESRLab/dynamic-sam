@@ -6,32 +6,31 @@ Interactive 3D point cloud segmentation with adaptive masking.
 
 Tested with:
 - Ubuntu 22.04
-- An NVIDIA driver supporting CUDA 12.4 (550.54.14+); see [Installation](#1-installation) if yours supports a different CUDA version
 - Python 3.10
-- PyTorch 2.6.0 (CUDA 12.4 build)
+- PyTorch 2.6.0, on CUDA 11.8 through 12.6 (see [Installation](#1-installation) for picking the right build for your GPU driver)
 
 ## 1. Installation
 
-### Using uv (recommended)
+`torch`/`triton` need a build matching your machine's NVIDIA driver. `uv` can detect this automatically:
 
 ```shell
 $ uv venv dynamic-sam --python 3.10
 $ source dynamic-sam/bin/activate
 
 # pick the extras you need:
-$ uv pip install -e ".[training]"                # to train/evaluate
-$ uv pip install -e ".[inference]"               # to serve a trained checkpoint
-$ uv pip install -e ".[training,inference,dev]"  # everything, including the test suite
+$ uv pip install -e ".[training]" --torch-backend=auto                # to train/evaluate
+$ uv pip install -e ".[inference]" --torch-backend=auto               # to serve a trained checkpoint
+$ uv pip install -e ".[training,inference,dev]" --torch-backend=auto  # everything, including the test suite
 ```
 
-`torch`/`torchvision` are pinned to a CUDA 12.4 build via `pyproject.toml`'s `[tool.uv.sources]`, matching drivers that support CUDA 12.4. If your driver only supports an older or newer CUDA version, point the `pytorch-cu124` index entry in `pyproject.toml` at the matching `download.pytorch.org/whl/cuXXX` channel and update the `torch`/`torchvision` version pins to a release published on that channel.
+`--torch-backend=auto` inspects your driver and picks a matching torch/torchvision build (cu118, cu124, cu126, ...) instead of whatever plain PyPI happens to default to. If detection picks the wrong one, or you're installing for a different machine than the one running the command, pass an explicit backend instead, e.g. `--torch-backend=cu118`. This can't be set as a persistent default in `pyproject.toml` (not supported by `uv` 0.8), so it has to be passed on every install command; alternatively, export `UV_TORCH_BACKEND=auto` (or a specific `cuXXX`) once per shell session.
 
 ### Using pip
 
 ```shell
 $ python3.10 -m venv dynamic-sam
 $ source dynamic-sam/bin/activate
-$ pip install -e ".[training,inference,dev]" --extra-index-url https://download.pytorch.org/whl/cu124
+$ pip install -e ".[training,inference,dev]" --extra-index-url https://download.pytorch.org/whl/cu118  # replace cu118 with your driver's supported CUDA version
 ```
 
 ## 2. Dataset Setup
