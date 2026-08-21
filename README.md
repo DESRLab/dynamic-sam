@@ -81,6 +81,8 @@ This downloads through the local Hugging Face cache (`HF_HOME`), reusing an alre
 
 See `dynamic-sam serve --help` for the full option list, including `--max-users`/`--max-frames-per-user` to size the per-user encoded-point-cloud cache (defaults: 1 user, 5 cached frames each).
 
+> **Important:** `--num-group` (default 128) stays fixed for the life of the server; `group_size` is then recomputed per request as `num_points / num_group + 1`, so it automatically adapts to each point cloud's size. If you're serving point clouds with a very different point count than the model was trained on (e.g. large outdoor scenes vs. small room scans), set `--num-group` so the resulting `group_size` stays close to the training regime (ScanNet: `group_size=32`, `num_group=128`) — otherwise the model still runs, but segmentation quality can degrade. `--group-size`/`--num-group` are ignored entirely when serving a `.safetensors` file or `--hf-repo-id`, which carry their own values.
+
 ## Acknowledgment
 
 Parts of our code are built by borrowing ideas and being inspired by following repositiories:
