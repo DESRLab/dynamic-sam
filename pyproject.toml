@@ -38,6 +38,8 @@ inference = [
     "uvicorn==0.52.4",
     "pydantic==2.13.4",
     "click==8.4.2",
+    "safetensors==0.8.0",
+    "huggingface_hub==1.28.0",
 ]
 # Everything the `dynamic-sam train`/`dynamic-sam test` CLI commands
 # (src/cli, src/task/cli.py) / the Lightning training and data pipeline need

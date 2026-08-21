@@ -11,13 +11,27 @@ def cli():
 
 
 @cli.command()
-@click.argument('model_path', type=click.Path(exists=True, dir_okay=False, file_okay=True, path_type=str))
+@click.argument('model_path', required=False, default=None,
+                 type=click.Path(exists=True, dir_okay=False, file_okay=True, path_type=str))
+@click.option('--hf-repo-id', 'hf_repo_id', type=str, required=False, default=None,
+              help='Hugging Face Hub repo to download the model from when MODEL_PATH is not '
+                   'given (e.g. your-username/dynamic-sam-checkpoint). Downloads go through the '
+                   'local HF cache (HF_HOME), so a file already cached there is reused rather '
+                   'than re-downloaded. Uses your `hf auth login` token automatically for '
+                   'private repos.')
+@click.option('--hf-filename', 'hf_filename', type=str, required=False, default='model.safetensors',
+              help='Filename within --hf-repo-id to download.')
+@click.option('--hf-revision', 'hf_revision', type=str, required=False, default=None,
+              help='Optional branch/tag/commit to download from --hf-repo-id.')
 @click.option('--group-size', 'group_size', type=int, required=False, default=32,
-              help='Number of points per group the point cloud encoder was trained with.')
+              help='Number of points per group the point cloud encoder was trained with. '
+                   'Ignored for a .safetensors model, which carries its own group_size.')
 @click.option('--num-group', 'num_group', type=int, required=False, default=128,
-              help='Number of groups the point cloud encoder was trained with.')
+              help='Number of groups the point cloud encoder was trained with. '
+                   'Ignored for a .safetensors model, which carries its own num_group.')
 @click.option('--trained-optimized/--not-trained-optimized', 'optimized', default=True,
-              help='Whether the checkpoint was trained with torch.compile (changes the state_dict key prefix).')
+              help='Whether the checkpoint was trained with torch.compile (changes the state_dict '
+                   'key prefix). Ignored for a .safetensors model.')
 @click.option('--device', 'device', type=int, required=False, default=0, help='CUDA device index to load the model onto.')
 @click.option('--port', 'port', type=int, required=False, default=8000)
 @click.option('--workers', 'workers', type=int, required=False, default=1)
@@ -30,7 +44,10 @@ def cli():
                    'this, that user\'s least-recently-encoded frame is evicted to make room '
                    'for a new one.')
 def serve(
-    model_path: str,
+    model_path: str | None,
+    hf_repo_id: str | None,
+    hf_filename: str,
+    hf_revision: str | None,
     group_size: int,
     num_group: int,
     optimized: bool,
@@ -40,40 +57,35 @@ def serve(
     max_users: int,
     max_frames_per_user: int,
 ):
-    """Serve a DynamicSAM checkpoint at MODEL_PATH behind a FastAPI HTTP API.
+    """Serve a DynamicSAM checkpoint behind a FastAPI HTTP API.
+
+    MODEL_PATH may be a full Lightning checkpoint (.ckpt) or an inference-only
+    safetensors file. If omitted, pass --hf-repo-id to download the model
+    from Hugging Face Hub instead (through the local HF cache).
 
     Requires the `inference` extra: pip install "dynamic-sam[inference]"
     """
     # imported here (not at module level) so that `dynamic-sam` itself, and
     # the train/test commands, don't require fastapi/uvicorn/pydantic to be
     # installed -- only running `serve` does.
-    import torch
     import uvicorn
 
-    from src.models import DynamicSAM, MaskDecoderParams, PcdEncoderParams, PromptEncoderParams
     from src.serve import create_fast_api
+    from src.serve.checkpoint import load_dynamic_sam
+
+    if model_path is None:
+        if hf_repo_id is None:
+            raise click.UsageError(
+                'Provide MODEL_PATH, or --hf-repo-id (and optionally --hf-filename/--hf-revision) '
+                'to load from Hugging Face Hub instead.'
+            )
+        from huggingface_hub import hf_hub_download
+
+        print(f"Fetching {hf_filename} from {hf_repo_id} (Hugging Face cache: HF_HOME)...")
+        model_path = hf_hub_download(repo_id=hf_repo_id, filename=hf_filename, revision=hf_revision)
 
     print("Loading model...")
-    ck = torch.load(model_path, map_location=lambda storage, loc: storage.cuda(device))
-
-    keyword = ''
-    if optimized:
-        keyword = '._orig_mod'
-
-    pcd_encoder_weights = {k[len(f"network{keyword}.pcd_encoder."):]: v for k, v in ck["state_dict"].items() if k.startswith(f"network{keyword}.pcd_encoder.")}
-    mask_decoder_weights = {k[len(f"network{keyword}.mask_decoder."):]: v for k, v in ck["state_dict"].items() if k.startswith(f"network{keyword}.mask_decoder.")}
-    prompt_encoder_weights = {k[len(f"network{keyword}.prompt_encoder."):]: v for k, v in ck["state_dict"].items() if k.startswith(f"network{keyword}.prompt_encoder.")}
-
-    pcd_encoder_params = PcdEncoderParams(group_size=group_size, num_group=num_group)
-    prompt_encoder_params = PromptEncoderParams(embedding_dim=pcd_encoder_params.trans_dim)
-    mask_decoder_params = MaskDecoderParams(trans_dim=pcd_encoder_params.trans_dim)
-    model = DynamicSAM(pcd_encoder_params, prompt_encoder_params, mask_decoder_params)
-    model.pcd_encoder.to(f'cuda:{device}')
-    model.mask_decoder.to(f'cuda:{device}')
-    model.prompt_encoder.to(f'cuda:{device}')
-    model.to(f'cuda:{device}')
-    model.load_modules_state_dict(pcd_encoder_weights, prompt_encoder_weights, mask_decoder_weights)
-    model.eval()
+    model = load_dynamic_sam(model_path, device, group_size=group_size, num_group=num_group, optimized=optimized)
 
     print(f"Serving with max_users={max_users}, max_frames_per_user={max_frames_per_user}")
     app = create_fast_api(model, device=f'cuda:{device}', max_users=max_users, max_frames_per_user=max_frames_per_user)

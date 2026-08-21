@@ -1,6 +1,6 @@
 # DynamicSAM
 
-Interactive 3D point cloud segmentation with adaptive masking and fine-grained version control.
+Interactive 3D point cloud segmentation with adaptive masking.
 
 ## Environment
 
@@ -66,11 +66,19 @@ Anything after `-c CONFIG` is forwarded to LightningCLI verbatim, so any Trainer
 
 ## 4. Serving
 
-Requires the `inference` extra (see [Installation](#1-installation)):
+Requires the `inference` extra (see [Installation](#1-installation)). Serve a local checkpoint (`.ckpt` or `.safetensors`):
 
 ```shell
 $ dynamic-sam serve /path/to/checkpoint.ckpt --port 8000
 ```
+
+Or serve directly from a Hugging Face Hub repo, without downloading anything by hand:
+
+```shell
+$ dynamic-sam serve --hf-repo-id Marali/dynamic-sam --port 8000
+```
+
+This downloads through the local Hugging Face cache (`HF_HOME`), reusing an already-cached file rather than re-downloading, and uses your `hf auth login` token automatically for private repos.
 
 See `dynamic-sam serve --help` for the full option list, including `--max-users`/`--max-frames-per-user` to size the per-user encoded-point-cloud cache (defaults: 1 user, 5 cached frames each).
 
