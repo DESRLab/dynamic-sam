@@ -2,6 +2,9 @@
 
 Interactive 3D point cloud segmentation with adaptive masking.
 
+<img src="assets/dynamic-sam-demo.gif" alt="DynamicSAM demo" width="100%" />
+
+
 ## Environment
 
 Tested with:
