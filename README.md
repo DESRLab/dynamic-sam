@@ -92,3 +92,29 @@ Parts of our code are built by borrowing ideas and being inspired by following r
 - [Segment Anything Model](https://github.com/facebookresearch/segment-anything.git): Mask decoder architecture
 - [PointBERT](https://github.com/lulutang0608/Point-BERT.git): Point Cloud encoder architecture
 - [Reviving Iterative Training with Mask Guidance for Interactive Segmentation](https://github.com/SamsungLabs/ritm_interactive_segmentation.git): Loss, evaluation metrics and training loop for interactive semgnetation.
+
+## License
+
+DynamicSAM is licensed under the [Apache License, Version 2.0](LICENSE).
+
+## Citation
+
+If you find our work useful, please cite it:
+
+```bibtex
+@article{10.1145/3845998,
+author = {Leung, Tin Long and Bahari, Maral and Tan, Tun Jian and Tan, Pin Siang and WANG, Yu-Hsing},
+title = {A Framework for Interactive 3D Segmentation with Adaptive Masking and Fine-Grained Version Control},
+year = {2026},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+issn = {2157-6904},
+url = {https://doi.org/10.1145/3845998},
+doi = {10.1145/3845998},
+abstract = {Fine-tuning remains an important step in adapting 3D foundation models to downstream applications, but it is laborious and time-consuming to annotate training datasets in 3D. Existing semi-automatic annotation methods for segmentation masks fail to generalize beyond RGB point cloud data and are difficult to control. While a number of 3D annotation interfaces provide undo/redo functionality to help correct mistakes, they lack a comprehensive data versioning strategy, limiting the potential for user analysis and quality control. To tackle these issues, we present DynamicSAM Annotator, an AI-assisted point segmentation framework with the following contributions: 1) a novel interactive 3D point cloud segmentation model that exclusively uses XYZ coordinates with an adaptive thresholding mechanism in segmentation masks; 2) a 3D annotation platform to enable efficient 3D point cloud annotation for semantic and instance segmentation tasks; and 3) a fine-grained version control system that efficiently persists each annotation operation to disk using Git-like operations. Rigorous evaluations across seven benchmark datasets demonstrate DynamicSAM's effectiveness in both indoor and outdoor environments, achieving an average Intersection over Union (IoU) of 59.6\% for a single click, highlighting the model's outstanding generalization capabilities. Meanwhile, our simulated benchmark shows that our version control system maintains sub-second latency even with tens of thousands of snapshots stored.},
+note = {Just Accepted},
+journal = {ACM Trans. Intell. Syst. Technol.},
+month = sep,
+keywords = {3D Annotation, Interactive Segmentation, Data Versioning, Mask Generation, Assisted Annotation}
+}
+```
