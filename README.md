@@ -1,6 +1,18 @@
 # DynamicSAM
 
-Interactive 3D point cloud segmentation with adaptive masking.
+<p align="center">
+  <a href="https://dl.acm.org/doi/10.1145/3845998">
+    <img src="https://img.shields.io/badge/Paper-ACM%20TIST-0085CA?style=for-the-badge&amp;logo=acm&amp;logoColor=white" alt="Paper — ACM TIST" />
+  </a>
+  <a href="https://huggingface.co/DESRLab/dynamic-sam">
+    <img src="https://img.shields.io/badge/Model-Hugging%20Face-FFD21E?style=for-the-badge&amp;logo=huggingface&amp;logoColor=white" alt="Model — Hugging Face" />
+  </a>
+  <a href="https://github.com/DESRLab/st-annotator">
+    <img src="https://img.shields.io/badge/Interface-GitHub-181717?style=for-the-badge&amp;logo=github&amp;logoColor=white" alt="Interface — GitHub" />
+  </a>
+</p>
+
+DynamicSAM Annotator brings interactive 3D segmentation and annotation history together in an AI-assisted framework for labeling point clouds. Its DynamicSAM model turns user clicks into segmentation masks using only XYZ coordinates, with adaptive thresholding to guide mask generation across indoor and outdoor scenes. Integrated with [ST Annotator](https://github.com/DESRLab/st-annotator), it provides an annotation interface for both semantic and instance segmentation. Fine-grained version control saves each annotation operation to disk using Git-like operations, preserving a detailed history for reviewing edits and supporting annotation quality control.
 
 <img src="assets/dynamic-sam-demo.gif" alt="DynamicSAM demo" width="100%" />
 
@@ -77,7 +89,7 @@ $ dynamic-sam serve /path/to/checkpoint.ckpt --port 8000
 Or serve directly from a Hugging Face Hub repo, without downloading anything by hand:
 
 ```shell
-$ dynamic-sam serve --hf-repo-id Marali/dynamic-sam --port 8000
+$ dynamic-sam serve --hf-repo-id DESRLab/dynamic-sam --port 8000
 ```
 
 This downloads through the local Hugging Face cache (`HF_HOME`), reusing an already-cached file rather than re-downloading, and uses your `hf auth login` token automatically for private repos.
